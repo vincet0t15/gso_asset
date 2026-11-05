@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssetModelController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\PpeClassificationController;
 use Illuminate\Support\Facades\Route;
@@ -76,6 +77,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('ppe-classifications/{ppeClassification}', [PpeClassificationController::class, 'destroy'])
         ->middleware('permission:ppe_classifications.delete')
         ->name('ppe-classifications.destroy');
+
+    Route::get('items', [ItemController::class, 'index'])
+        ->middleware('permission:items.view')
+        ->name('items.index');
+    Route::post('items', [ItemController::class, 'store'])
+        ->middleware('permission:items.create')
+        ->name('items.store');
+    Route::patch('items/{item}', [ItemController::class, 'update'])
+        ->middleware('permission:items.update')
+        ->name('items.update');
+    Route::delete('items/{item}', [ItemController::class, 'destroy'])
+        ->middleware('permission:items.delete')
+        ->name('items.destroy');
 });
 
 require __DIR__.'/settings.php';

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, ClipboardList, FolderGit2, Layers, LayoutGrid, Tags } from 'lucide-react';
+import { BookOpen, Boxes, Building2, ClipboardList, FolderGit2, Layers, LayoutGrid, Package, Tags } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -16,6 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
+import { index as items } from '@/routes/items';
 import { index as models } from '@/routes/models';
 import { index as offices } from '@/routes/offices';
 import { index as ppeClassifications } from '@/routes/ppe-classifications';
@@ -36,6 +37,15 @@ export function AppSidebar() {
                       title: 'Categories',
                       href: categories.url(),
                       icon: Layers,
+                  },
+              ]
+            : []),
+        ...(auth.permissions.includes('items.view')
+            ? [
+                  {
+                      title: 'Items',
+                      href: items.url(),
+                      icon: Package,
                   },
               ]
             : []),

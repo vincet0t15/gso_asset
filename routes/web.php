@@ -4,6 +4,7 @@ use App\Http\Controllers\AssetModelController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\PpeClassificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -62,6 +63,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('offices/{office}', [OfficeController::class, 'destroy'])
         ->middleware('permission:offices.delete')
         ->name('offices.destroy');
+
+    Route::get('ppe-classifications', [PpeClassificationController::class, 'index'])
+        ->middleware('permission:ppe_classifications.view')
+        ->name('ppe-classifications.index');
+    Route::post('ppe-classifications', [PpeClassificationController::class, 'store'])
+        ->middleware('permission:ppe_classifications.create')
+        ->name('ppe-classifications.store');
+    Route::patch('ppe-classifications/{ppeClassification}', [PpeClassificationController::class, 'update'])
+        ->middleware('permission:ppe_classifications.update')
+        ->name('ppe-classifications.update');
+    Route::delete('ppe-classifications/{ppeClassification}', [PpeClassificationController::class, 'destroy'])
+        ->middleware('permission:ppe_classifications.delete')
+        ->name('ppe-classifications.destroy');
 });
 
 require __DIR__.'/settings.php';

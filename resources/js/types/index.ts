@@ -5,4 +5,5 @@ export type * from './category';
 export type * from './navigation';
 export type * from './office';
 export type * from './pagination';
+export type * from './ppe-classification';
 export type * from './ui';

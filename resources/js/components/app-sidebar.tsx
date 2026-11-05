@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, FolderGit2, Layers, LayoutGrid, Tags } from 'lucide-react';
+import { BookOpen, Boxes, Building2, ClipboardList, FolderGit2, Layers, LayoutGrid, Tags } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -18,6 +18,7 @@ import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as models } from '@/routes/models';
 import { index as offices } from '@/routes/offices';
+import { index as ppeClassifications } from '@/routes/ppe-classifications';
 import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -62,6 +63,15 @@ export function AppSidebar() {
                       title: 'Offices',
                       href: offices.url(),
                       icon: Building2,
+                  },
+              ]
+            : []),
+        ...(auth.permissions.includes('ppe_classifications.view')
+            ? [
+                  {
+                      title: 'PPE classifications',
+                      href: ppeClassifications.url(),
+                      icon: ClipboardList,
                   },
               ]
             : []),

@@ -20,7 +20,7 @@ test('reset password link can be requested', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post(route('password.email'), ['username' => $user->username]);
 
     Notification::assertSentTo($user, ResetPassword::class);
 });
@@ -30,10 +30,10 @@ test('reset password screen can be rendered', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post(route('password.email'), ['username' => $user->username]);
 
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-        $response = $this->get(route('password.reset', $notification->token));
+        $response = $this->get(route('password.reset', ['token' => $notification->token, 'username' => $user->username]));
 
         $response->assertOk();
 
@@ -46,12 +46,12 @@ test('password can be reset with valid token', function () {
 
     $user = User::factory()->create();
 
-    $this->post(route('password.email'), ['email' => $user->email]);
+    $this->post(route('password.email'), ['username' => $user->username]);
 
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
         $response = $this->post(route('password.update'), [
             'token' => $notification->token,
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -69,7 +69,7 @@ test('password cannot be reset with invalid token', function () {
 
     $response = $this->post(route('password.update'), [
         'token' => 'invalid-token',
-        'email' => $user->email,
+        'username' => $user->username,
         'password' => 'newpassword123',
         'password_confirmation' => 'newpassword123',
     ]);

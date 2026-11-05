@@ -47,7 +47,7 @@ return [
 
     'username' => 'username',
 
-    'email' => 'email',
+    'email' => 'username',
 
     /*
     |--------------------------------------------------------------------------
@@ -144,7 +144,8 @@ return [
 
     'features' => [
         Features::registration(),
-        Features::resetPasswords(),
+        // Password reset is disabled: accounts authenticate with a username
+        // and no email address is collected to send a reset link to.
     ],
 
 ];

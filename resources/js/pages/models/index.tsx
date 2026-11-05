@@ -1,11 +1,7 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { PencilIcon, PlusIcon, Search, Trash2 } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
-import { Pagination } from '@/components/pagination';
-import { Badge } from '@/components/ui/badge';
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -21,14 +17,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { create, edit, index } from '@/routes/models';
-import type {
-    AssetModel,
-    Auth,
-    BrandOption,
-    PaginatedData,
-} from '@/types';
+import { index } from '@/routes/models';
+import type { AssetModel, Auth, BrandOption, PaginatedData } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { PencilIcon, PlusIcon, Search, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { CreateAssetModelDialog } from './create';
 import { DeleteAssetModelDialog } from './delete';
+import { EditAssetModelDialog } from './edit';
+import { Pagination } from '@/components/pagination';
 
 type Props = {
     models: PaginatedData<AssetModel>;
@@ -41,11 +38,15 @@ type Props = {
 
 export default function ModelsIndex({ models, brands, filters }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
+
     const [search, setSearch] = useState(filters.search ?? '');
     const [brandFilter, setBrandFilter] = useState(
         filters.brand ? String(filters.brand) : 'all',
     );
-    const [deleting, setDeleting] = useState<AssetModel | null>(null);
+    const [openCreate, setOpenCreate] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<AssetModel | null>(null);
+    const [openEdit, setOpenEdit] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
 
     const canCreate = auth.permissions.includes('models.create');
     const canUpdate = auth.permissions.includes('models.update');
@@ -55,190 +56,204 @@ export default function ModelsIndex({ models, brands, filters }: Props) {
         router.get(
             index.url(),
             {
-                search: nextSearch,
-                brand: nextBrand === 'all' ? '' : nextBrand,
+                search: nextSearch || undefined,
+                brand: nextBrand === 'all' ? undefined : nextBrand,
             },
-            { preserveState: true, replace: true },
+            { preserveState: true, preserveScroll: true },
         );
     };
 
-    const submitSearch = (event: FormEvent) => {
-        event.preventDefault();
-        applyFilters(search, brandFilter);
+    const handleSearchKeyDown = (
+        event: React.KeyboardEvent<HTMLInputElement>,
+    ) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            applyFilters(search, brandFilter);
+        }
+    };
+
+    const handleEdit = (model: AssetModel) => {
+        setSelectedModel(model);
+        setOpenEdit(true);
+    };
+
+    const handleDelete = (model: AssetModel) => {
+        setSelectedModel(model);
+        setOpenDelete(true);
     };
 
     return (
         <>
             <Head title="Models" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-xl font-semibold tracking-tight">
-                            Models
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Manage asset models and the brand they belong to.
-                        </p>
-                    </div>
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                <Heading
+                    title="Model management"
+                    description="Overview and maintenance of all model entries."
+                />
 
+                <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                     {canCreate && (
-                        <Button asChild>
-                            <Link href={create.url()}>
-                                <PlusIcon />
-                                New model
-                            </Link>
+                        <Button onClick={() => setOpenCreate(true)}>
+                            <PlusIcon className="h-4 w-4" />
+                            Create model
                         </Button>
                     )}
+
+                    <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                        <Select
+                            value={brandFilter}
+                            onValueChange={(value) => {
+                                setBrandFilter(value);
+                                applyFilters(search, value);
+                            }}
+                        >
+                            <SelectTrigger className="w-full sm:w-48">
+                                <SelectValue placeholder="All brands" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All brands</SelectItem>
+                                {brands.map((brand) => (
+                                    <SelectItem
+                                        key={brand.id}
+                                        value={String(brand.id)}
+                                    >
+                                        {brand.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <div className="relative w-full sm:w-[250px]">
+                            <Label htmlFor="model-search" className="sr-only">
+                                Search
+                            </Label>
+                            <Input
+                                id="model-search"
+                                placeholder="Search the models..."
+                                className="w-full pl-8"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                onKeyDown={handleSearchKeyDown}
+                            />
+                            <Search className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-50 select-none" />
+                        </div>
+                    </div>
                 </div>
 
-                <Card>
-                    <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <CardTitle className="text-base">
-                            All models
-                            <Badge variant="secondary" className="ml-2">
-                                {models.total}
-                            </Badge>
-                        </CardTitle>
-
-                        <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-                            <Select
-                                value={brandFilter}
-                                onValueChange={(value) => {
-                                    setBrandFilter(value);
-                                    applyFilters(search, value);
-                                }}
-                            >
-                                <SelectTrigger className="w-full sm:w-48">
-                                    <SelectValue placeholder="All brands" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        All brands
-                                    </SelectItem>
-                                    {brands.map((brand) => (
-                                        <SelectItem
-                                            key={brand.id}
-                                            value={String(brand.id)}
-                                        >
-                                            {brand.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <form
-                                onSubmit={submitSearch}
-                                className="flex w-full gap-2"
-                            >
-                                <div className="relative w-full sm:w-64">
-                                    <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                                    <Input
-                                        value={search}
-                                        onChange={(event) =>
-                                            setSearch(event.target.value)
-                                        }
-                                        placeholder="Search models..."
-                                        className="pl-8"
-                                    />
-                                </div>
-                                <Button type="submit" variant="secondary">
-                                    Search
-                                </Button>
-                            </form>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Model</TableHead>
-                                    <TableHead>Brand</TableHead>
-                                    <TableHead>Code</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="text-right">
-                                        Actions
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {models.data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={5}
-                                            className="h-24 text-center text-muted-foreground"
-                                        >
-                                            No models found.
+                <div className="w-full overflow-hidden rounded-sm border shadow-sm">
+                    <Table>
+                        <TableHeader className="bg-muted/50">
+                            <TableRow>
+                                <TableHead className="text-primary font-bold">
+                                    Model
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Brand
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Code
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Description
+                                </TableHead>
+                                <TableHead className="text-primary text-right font-bold">
+                                    Action
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {models.data.length > 0 ? (
+                                models.data.map((model) => (
+                                    <TableRow
+                                        key={model.id}
+                                        className="hover:bg-muted/30 text-sm"
+                                    >
+                                        <TableCell className="text-sm">
+                                            {model.name}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {model.brand?.name ?? '—'}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {model.code}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {model.description || '—'}
+                                        </TableCell>
+                                        <TableCell className="flex items-center justify-end gap-2 text-sm">
+                                            {canUpdate && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                                                    onClick={() =>
+                                                        handleEdit(model)
+                                                    }
+                                                    title="Edit"
+                                                >
+                                                    <PencilIcon className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {canDelete && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    onClick={() =>
+                                                        handleDelete(model)
+                                                    }
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    models.data.map((model) => (
-                                        <TableRow key={model.id}>
-                                            <TableCell className="font-medium">
-                                                {model.name}
-                                            </TableCell>
-                                            <TableCell>
-                                                {model.brand?.name ?? '—'}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {model.code}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="max-w-xs truncate whitespace-normal text-muted-foreground">
-                                                {model.description || '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    {canUpdate && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={edit.url(
-                                                                    model.id,
-                                                                )}
-                                                            >
-                                                                <PencilIcon />
-                                                                Edit
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-                                                    {canDelete && (
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                setDeleting(
-                                                                    model,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 />
-                                                            Delete
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="py-3 text-center text-gray-500"
+                                    >
+                                        No data available.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
 
-                        <Pagination data={models} />
-                    </CardContent>
-                </Card>
+                <Pagination data={models} />
             </div>
 
-            <DeleteAssetModelDialog
-                model={deleting}
-                open={deleting !== null}
-                onClose={() => setDeleting(null)}
-            />
+            {openCreate && (
+                <CreateAssetModelDialog
+                    isOpen={openCreate}
+                    onClose={() => setOpenCreate(false)}
+                    brands={brands}
+                />
+            )}
+
+            {openEdit && selectedModel && (
+                <EditAssetModelDialog
+                    isOpen={openEdit}
+                    onClose={() => setOpenEdit(false)}
+                    model={selectedModel}
+                    brands={brands}
+                />
+            )}
+
+            {openDelete && selectedModel && (
+                <DeleteAssetModelDialog
+                    isOpen={openDelete}
+                    onClose={() => setOpenDelete(false)}
+                    model={selectedModel}
+                />
+            )}
         </>
     );
 }

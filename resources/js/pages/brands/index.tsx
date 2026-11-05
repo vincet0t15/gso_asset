@@ -1,11 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { PencilIcon, PlusIcon, Search, Trash2 } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
-import { Pagination } from '@/components/pagination';
-import { Badge } from '@/components/ui/badge';
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -14,10 +10,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { create, edit, index } from '@/routes/brands';
+import { index } from '@/routes/brands';
 import type { Auth, Brand, PaginatedData } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { PencilIcon, PlusIcon, Search, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { CreateBrandDialog } from './create';
 import { DeleteBrandDialog } from './delete';
+import { EditBrandDialog } from './edit';
+import { Pagination } from '@/components/pagination';
 
 type Props = {
     brands: PaginatedData<Brand>;
@@ -28,168 +29,188 @@ type Props = {
 
 export default function BrandsIndex({ brands, filters }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
+
     const [search, setSearch] = useState(filters.search ?? '');
-    const [deleting, setDeleting] = useState<Brand | null>(null);
+    const [openCreate, setOpenCreate] = useState(false);
+    const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+    const [openEdit, setOpenEdit] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
 
     const canCreate = auth.permissions.includes('brands.create');
     const canUpdate = auth.permissions.includes('brands.update');
     const canDelete = auth.permissions.includes('brands.delete');
 
-    const submitSearch = (event: FormEvent) => {
-        event.preventDefault();
+    const handleSearchKeyDown = (
+        event: React.KeyboardEvent<HTMLInputElement>,
+    ) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
 
-        router.get(
-            index.url(),
-            { search },
-            { preserveState: true, replace: true },
-        );
+            router.get(
+                index.url(),
+                search ? { search } : undefined,
+                { preserveState: true, preserveScroll: true },
+            );
+        }
+    };
+
+    const handleEdit = (brand: Brand) => {
+        setSelectedBrand(brand);
+        setOpenEdit(true);
+    };
+
+    const handleDelete = (brand: Brand) => {
+        setSelectedBrand(brand);
+        setOpenDelete(true);
     };
 
     return (
         <>
             <Head title="Brands" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-xl font-semibold tracking-tight">
-                            Brands
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Manage the brands that asset models belong to.
-                        </p>
-                    </div>
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                <Heading
+                    title="Brand management"
+                    description="Overview and maintenance of all brand entries."
+                />
 
+                <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     {canCreate && (
-                        <Button asChild>
-                            <Link href={create.url()}>
-                                <PlusIcon />
-                                New brand
-                            </Link>
+                        <Button onClick={() => setOpenCreate(true)}>
+                            <PlusIcon className="h-4 w-4" />
+                            Create brand
                         </Button>
                     )}
+
+                    <div className="flex w-full items-center gap-2 sm:w-auto">
+                        <div className="relative w-full sm:w-[250px]">
+                            <Label htmlFor="brand-search" className="sr-only">
+                                Search
+                            </Label>
+                            <Input
+                                id="brand-search"
+                                placeholder="Search the brands..."
+                                className="w-full pl-8"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                onKeyDown={handleSearchKeyDown}
+                            />
+                            <Search className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-50 select-none" />
+                        </div>
+                    </div>
                 </div>
 
-                <Card>
-                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <CardTitle className="text-base">
-                            All brands
-                            <Badge variant="secondary" className="ml-2">
-                                {brands.total}
-                            </Badge>
-                        </CardTitle>
-
-                        <form
-                            onSubmit={submitSearch}
-                            className="flex w-full gap-2 sm:w-auto"
-                        >
-                            <div className="relative w-full sm:w-64">
-                                <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    value={search}
-                                    onChange={(event) =>
-                                        setSearch(event.target.value)
-                                    }
-                                    placeholder="Search brands..."
-                                    className="pl-8"
-                                />
-                            </div>
-                            <Button type="submit" variant="secondary">
-                                Search
-                            </Button>
-                        </form>
-                    </CardHeader>
-
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Code</TableHead>
-                                    <TableHead>Models</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="text-right">
-                                        Actions
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {brands.data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={5}
-                                            className="h-24 text-center text-muted-foreground"
-                                        >
-                                            No brands found.
+                <div className="w-full overflow-hidden rounded-sm border shadow-sm">
+                    <Table>
+                        <TableHeader className="bg-muted/50">
+                            <TableRow>
+                                <TableHead className="text-primary font-bold">
+                                    Name
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Code
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Models
+                                </TableHead>
+                                <TableHead className="text-primary font-bold">
+                                    Description
+                                </TableHead>
+                                <TableHead className="text-primary text-right font-bold">
+                                    Action
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {brands.data.length > 0 ? (
+                                brands.data.map((brand) => (
+                                    <TableRow
+                                        key={brand.id}
+                                        className="hover:bg-muted/30 text-sm"
+                                    >
+                                        <TableCell className="text-sm">
+                                            {brand.name}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {brand.code}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {brand.models_count ?? 0}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {brand.description || '—'}
+                                        </TableCell>
+                                        <TableCell className="flex items-center justify-end gap-2 text-sm">
+                                            {canUpdate && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                                                    onClick={() =>
+                                                        handleEdit(brand)
+                                                    }
+                                                    title="Edit"
+                                                >
+                                                    <PencilIcon className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {canDelete && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                    onClick={() =>
+                                                        handleDelete(brand)
+                                                    }
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    brands.data.map((brand) => (
-                                        <TableRow key={brand.id}>
-                                            <TableCell className="font-medium">
-                                                {brand.name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {brand.code}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {brand.models_count ?? 0}
-                                            </TableCell>
-                                            <TableCell className="max-w-xs truncate whitespace-normal text-muted-foreground">
-                                                {brand.description || '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    {canUpdate && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={edit.url(
-                                                                    brand.id,
-                                                                )}
-                                                            >
-                                                                <PencilIcon />
-                                                                Edit
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-                                                    {canDelete && (
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                setDeleting(
-                                                                    brand,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 />
-                                                            Delete
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="py-3 text-center text-gray-500"
+                                    >
+                                        No data available.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
 
-                        <Pagination data={brands} />
-                    </CardContent>
-                </Card>
+                <Pagination data={brands} />
             </div>
 
-            <DeleteBrandDialog
-                brand={deleting}
-                open={deleting !== null}
-                onClose={() => setDeleting(null)}
-            />
+            {openCreate && (
+                <CreateBrandDialog
+                    isOpen={openCreate}
+                    onClose={() => setOpenCreate(false)}
+                />
+            )}
+
+            {openEdit && selectedBrand && (
+                <EditBrandDialog
+                    isOpen={openEdit}
+                    onClose={() => setOpenEdit(false)}
+                    brand={selectedBrand}
+                />
+            )}
+
+            {openDelete && selectedBrand && (
+                <DeleteBrandDialog
+                    isOpen={openDelete}
+                    onClose={() => setOpenDelete(false)}
+                    brand={selectedBrand}
+                />
+            )}
         </>
     );
 }

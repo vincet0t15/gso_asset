@@ -117,7 +117,6 @@ test('staff can only view brands', function () {
     $staff->assignRole('staff');
 
     $this->actingAs($staff)->get(route('brands.index'))->assertOk();
-    $this->actingAs($staff)->get(route('brands.create'))->assertForbidden();
     $this->actingAs($staff)
         ->post(route('brands.store'), ['name' => 'Dell', 'code' => 'DELL'])
         ->assertForbidden();

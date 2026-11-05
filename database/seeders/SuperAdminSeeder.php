@@ -12,9 +12,9 @@ class SuperAdminSeeder extends Seeder
      *
      * Change the password after the first login.
      */
-    public const USERNAME = 'superadmin';
+    public const USERNAME = 'admin';
 
-    public const PASSWORD = 'SuperAdmin#2026';
+    public const PASSWORD = 'admin123';
 
     /**
      * Seed the application's super admin account.

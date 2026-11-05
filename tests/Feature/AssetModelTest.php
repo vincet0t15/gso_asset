@@ -136,7 +136,6 @@ test('staff can only view models', function () {
     $staff->assignRole('staff');
 
     $this->actingAs($staff)->get(route('models.index'))->assertOk();
-    $this->actingAs($staff)->get(route('models.create'))->assertForbidden();
     $this->actingAs($staff)
         ->delete(route('models.destroy', AssetModel::factory()->create()))
         ->assertForbidden();

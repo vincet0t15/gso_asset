@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -13,19 +14,15 @@ import { destroy } from '@/routes/models';
 import type { AssetModel } from '@/types';
 
 type Props = {
-    model: AssetModel | null;
-    open: boolean;
+    isOpen: boolean;
     onClose: () => void;
+    model: AssetModel;
 };
 
-export function DeleteAssetModelDialog({ model, open, onClose }: Props) {
+export function DeleteAssetModelDialog({ isOpen, onClose, model }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const handleDelete = () => {
-        if (!model) {
-            return;
-        }
-
         router.delete(destroy.url(model.id), {
             onStart: () => setProcessing(true),
             onFinish: () => {
@@ -36,34 +33,26 @@ export function DeleteAssetModelDialog({ model, open, onClose }: Props) {
     };
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={(value) => {
-                if (!value) {
-                    onClose();
-                }
-            }}
-        >
-            <DialogContent>
-                <DialogHeader>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-sm rounded-md">
+                <DialogHeader className="mb-2">
                     <DialogTitle>Delete model</DialogTitle>
-                    <DialogDescription>
-                        This will permanently delete{' '}
-                        <span className="font-semibold text-foreground">
-                            {model?.name}
+                    <DialogDescription className="text-xs">
+                        This action cannot be undone. This will permanently
+                        delete the model{' '}
+                        <span className="font-bold text-foreground">
+                            {model.name}
                         </span>
-                        . This action cannot be undone.
+                        .
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        disabled={processing}
-                    >
-                        Cancel
-                    </Button>
+                    <DialogClose asChild>
+                        <Button variant="outline" type="button">
+                            Cancel
+                        </Button>
+                    </DialogClose>
                     <Button
                         variant="destructive"
                         onClick={handleDelete}

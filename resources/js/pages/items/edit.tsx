@@ -13,13 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { CustomComboBox } from '@/components/CustomComboBox';
 import { Textarea } from '@/components/ui/textarea';
 import { update } from '@/routes/items';
 import type { Item, ItemForm as ItemFormData, ItemOption } from '@/types';
@@ -136,79 +130,64 @@ export function EditItemDialog({
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit-item-brand">Brand</Label>
-                            <Select
-                                value={data.brand_id}
-                                onValueChange={(value) =>
-                                    setData('brand_id', value)
+                            <CustomComboBox
+                                items={brands.map((brand) => ({
+                                    value: String(brand.id),
+                                    label: brand.name,
+                                }))}
+                                placeholder="None"
+                                value={
+                                    data.brand_id === 'none'
+                                        ? null
+                                        : data.brand_id
                                 }
-                            >
-                                <SelectTrigger id="edit-item-brand">
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {brands.map((brand) => (
-                                        <SelectItem
-                                            key={brand.id}
-                                            value={String(brand.id)}
-                                        >
-                                            {brand.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onSelect={(value) =>
+                                    setData('brand_id', value ?? 'none')
+                                }
+                            />
                             <InputError message={errors.brand_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit-item-model">Model</Label>
-                            <Select
-                                value={data.asset_model_id}
-                                onValueChange={(value) =>
-                                    setData('asset_model_id', value)
+                            <CustomComboBox
+                                items={models.map((model) => ({
+                                    value: String(model.id),
+                                    label: model.name,
+                                }))}
+                                placeholder="None"
+                                value={
+                                    data.asset_model_id === 'none'
+                                        ? null
+                                        : data.asset_model_id
                                 }
-                            >
-                                <SelectTrigger id="edit-item-model">
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {models.map((model) => (
-                                        <SelectItem
-                                            key={model.id}
-                                            value={String(model.id)}
-                                        >
-                                            {model.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onSelect={(value) =>
+                                    setData(
+                                        'asset_model_id',
+                                        value ?? 'none',
+                                    )
+                                }
+                            />
                             <InputError message={errors.asset_model_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="edit-item-category">Category</Label>
-                            <Select
-                                value={data.category_id}
-                                onValueChange={(value) =>
-                                    setData('category_id', value)
+                            <CustomComboBox
+                                items={categories.map((category) => ({
+                                    value: String(category.id),
+                                    label: category.name,
+                                }))}
+                                placeholder="None"
+                                value={
+                                    data.category_id === 'none'
+                                        ? null
+                                        : data.category_id
                                 }
-                            >
-                                <SelectTrigger id="edit-item-category">
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {categories.map((category) => (
-                                        <SelectItem
-                                            key={category.id}
-                                            value={String(category.id)}
-                                        >
-                                            {category.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onSelect={(value) =>
+                                    setData('category_id', value ?? 'none')
+                                }
+                            />
                             <InputError message={errors.category_id} />
                         </div>
 
@@ -216,27 +195,24 @@ export function EditItemDialog({
                             <Label htmlFor="edit-item-ppe">
                                 PPE classification
                             </Label>
-                            <Select
-                                value={data.ppe_classification_id}
-                                onValueChange={(value) =>
-                                    setData('ppe_classification_id', value)
+                            <CustomComboBox
+                                items={ppeClassifications.map((ppe) => ({
+                                    value: String(ppe.id),
+                                    label: ppe.name,
+                                }))}
+                                placeholder="None"
+                                value={
+                                    data.ppe_classification_id === 'none'
+                                        ? null
+                                        : data.ppe_classification_id
                                 }
-                            >
-                                <SelectTrigger id="edit-item-ppe">
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {ppeClassifications.map((ppe) => (
-                                        <SelectItem
-                                            key={ppe.id}
-                                            value={String(ppe.id)}
-                                        >
-                                            {ppe.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onSelect={(value) =>
+                                    setData(
+                                        'ppe_classification_id',
+                                        value ?? 'none',
+                                    )
+                                }
+                            />
                             <InputError
                                 message={errors.ppe_classification_id}
                             />

@@ -13,13 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { CustomComboBox } from '@/components/CustomComboBox';
 import { Textarea } from '@/components/ui/textarea';
 import { update } from '@/routes/models';
 import type {
@@ -74,26 +68,21 @@ export function EditAssetModelDialog({
                     <div className="space-y-4">
                         <div className="grid gap-2">
                             <Label htmlFor="edit-model-brand">Brand</Label>
-                            <Select
-                                value={data.brand_id}
-                                onValueChange={(value) =>
-                                    setData('brand_id', value)
+                            <CustomComboBox
+                                items={brands.map((brand) => ({
+                                    value: String(brand.id),
+                                    label: brand.name,
+                                }))}
+                                placeholder="Select a brand"
+                                value={
+                                    data.brand_id === ''
+                                        ? null
+                                        : data.brand_id
                                 }
-                            >
-                                <SelectTrigger id="edit-model-brand">
-                                    <SelectValue placeholder="Select a brand" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {brands.map((brand) => (
-                                        <SelectItem
-                                            key={brand.id}
-                                            value={String(brand.id)}
-                                        >
-                                            {brand.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onSelect={(value) =>
+                                    setData('brand_id', value ?? '')
+                                }
+                            />
                             <InputError message={errors.brand_id} />
                         </div>
 

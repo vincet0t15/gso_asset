@@ -2,13 +2,7 @@ import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { CustomComboBox } from '@/components/CustomComboBox';
 import {
     Table,
     TableBody,
@@ -101,28 +95,22 @@ export default function ModelsIndex({ models, brands, filters }: Props) {
                     )}
 
                     <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-                        <Select
+                        <CustomComboBox
+                            items={[
+                                { value: 'all', label: 'All brands' },
+                                ...brands.map((brand) => ({
+                                    value: String(brand.id),
+                                    label: brand.name,
+                                })),
+                            ]}
+                            placeholder="All brands"
                             value={brandFilter}
-                            onValueChange={(value) => {
-                                setBrandFilter(value);
-                                applyFilters(search, value);
+                            onSelect={(value) => {
+                                const val = value ?? 'all';
+                                setBrandFilter(val);
+                                applyFilters(search, val);
                             }}
-                        >
-                            <SelectTrigger className="w-full sm:w-48">
-                                <SelectValue placeholder="All brands" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All brands</SelectItem>
-                                {brands.map((brand) => (
-                                    <SelectItem
-                                        key={brand.id}
-                                        value={String(brand.id)}
-                                    >
-                                        {brand.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        />
 
                         <div className="relative w-full sm:w-[250px]">
                             <Label htmlFor="model-search" className="sr-only">

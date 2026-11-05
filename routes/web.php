@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssetModelController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OfficeController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('brands/{brand}', [BrandController::class, 'destroy'])
         ->middleware('permission:brands.delete')
         ->name('brands.destroy');
+
+    Route::get('categories', [CategoryController::class, 'index'])
+        ->middleware('permission:categories.view')
+        ->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])
+        ->middleware('permission:categories.create')
+        ->name('categories.store');
+    Route::patch('categories/{category}', [CategoryController::class, 'update'])
+        ->middleware('permission:categories.update')
+        ->name('categories.update');
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])
+        ->middleware('permission:categories.delete')
+        ->name('categories.destroy');
 
     Route::get('models', [AssetModelController::class, 'index'])
         ->middleware('permission:models.view')
